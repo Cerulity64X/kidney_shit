@@ -314,6 +314,10 @@ fn main() {
                             stack.push(n);
                         }
                     }
+                    'f' => {
+                        let nstr: String = head.next_string();
+                        head.push_string(fs::read_to_string(nstr).unwrap_or_else(|_|String::new()), &mut stack);
+                    }
                     _ => {}
                 }
             }
