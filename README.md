@@ -49,6 +49,7 @@ z: Duplicates the top of the stack by a number.
 b: Pops the top of the stack and pushes it onto the bank.
 i: Pops the top of the bank and pushes it onto the stack.
 f: Pushes the contents of a provided file, nothing is pushed if the file cannot be found or cannot be read.
+F: Pops the stack into a file, the file name is specified by a string.
 
 Stack arithmetic will pop the left and right values.
 s+: Adds the top two items in the stack (s prefix due to BF's +).

@@ -1,7 +1,7 @@
 #![allow(arithmetic_overflow)]
 #![allow(overflowing_literals)]
 
-use std::{env::Args, fs, io::{stdout, Write}, /*collections::HashMap*/};
+use std::{env::Args, fs::{self, File}, io::{stdout, Write}, /*collections::HashMap*/};
 
 use getch::Getch;
 
@@ -99,6 +99,16 @@ fn move_right(v: &mut Vec<i32>, head: &mut KSHead) {
 
 fn move_left(v: &mut Vec<i32>, head: &mut KSHead) {
     head.mem_pointer -= 1; if head.mem_pointer < 0 { v.insert(0, 0); head.mem_pointer += 1; }
+}
+
+fn write_to(f: &mut File, c: i32) {
+    let bytes: [u8; 4] = c.to_be_bytes();
+    // The first three bytes are optionally written if they are not null
+    if bytes[0] != 0 { f.write(&[bytes[0]]).unwrap_or_else(|_|0); }
+    if bytes[1] != 0 { f.write(&[bytes[1]]).unwrap_or_else(|_|0); }
+    if bytes[2] != 0 { f.write(&[bytes[2]]).unwrap_or_else(|_|0); }
+    // However, the last byte should be written, as if c is 0 then we know its a nul character.
+    f.write(&[bytes[3]]).unwrap_or_else(|_|0);
 }
 
 fn main() {
@@ -317,6 +327,13 @@ fn main() {
                     'f' => {
                         let nstr: String = head.next_string();
                         head.push_string(fs::read_to_string(nstr).unwrap_or_else(|_|String::new()), &mut stack);
+                    }
+                    'F' => {
+                        if let Ok(mut f) = File::create(head.next_string()) {
+                            while let Some(c) = stack.pop() {
+                                write_to(&mut f, c);
+                            }
+                        }
                     }
                     _ => {}
                 }
