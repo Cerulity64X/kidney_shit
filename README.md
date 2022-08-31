@@ -9,7 +9,7 @@ Adds two stacks (one for operating, one for banking).
 Popping an empty stack will pad it with 0s.
 The heap uses i32s, making some BF projects that overflow unable to interpret. However, this allows for higher limits, and allows you to have more options for output.
 The heap also uses a vector, expanding on out-of-bounds.
-The banking stack cannot be operated on, instead
+The banking stack cannot be operated on, instead values are pushed and popped directly from the operating stack.
 
 # Instructions
 Old BF:
