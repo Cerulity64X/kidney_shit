@@ -35,17 +35,54 @@ impl KSHead {
         self.script_location += 1;
         self.current()
     }
+    fn next_or(&mut self, def: char) -> char {
+        self.next().unwrap_or_else(||def)
+    }
     fn next_number(&mut self) -> i32 {
         let mut num: String = String::new();
-        let mut c = self.next();
-        let mut ch = c.unwrap_or_else(||'?');
-        while "-0123456789".contains(ch) {
-            if "0123456789".contains(ch) {num.push(c.unwrap());} else {break;}
+        let mut c: Option<char> = self.next();
+        let mut ch: char = c.unwrap_or_else(||'?');
+        if ch == '-' {
+            num.push(ch);
+            c = self.next();
+            ch = c.unwrap_or_else(||'?');
+        }
+        while "0123456789".contains(ch) {
+            num.push(ch);
             c = self.next();
             ch = c.unwrap_or_else(||'?');
         }
         self.script_location -= 1;
         i32::from_str_radix(num.as_str(), 10).unwrap_or_else(|_|0)
+    }
+    fn next_string(&mut self) -> String {
+        if "\"'".contains(self.next_or('?')) {
+            let mut st: String = String::new();
+            while let Some(c) = self.next() {
+                if c == '\\' {
+                    if let Some(esc) = self.next() {
+                        st.push(esc);
+                    }
+                } else {
+                    if "\"'".contains(c){
+                        break;
+                    } else {
+                        st.push(c);
+                    }
+                }
+            }
+            return st;
+        }
+        String::new()
+    }
+    fn push_string(&mut self, string: String, stack: &mut Vec<i32>) {
+        let mut stv: Vec<char> = vec![];
+        for c in string.chars() {
+            stv.push(c);
+        }
+        while let Some(c) = stv.pop() {
+            stack.push(c as i32);
+        }
     }
 }
 
@@ -69,8 +106,9 @@ fn main() {
     args.next().unwrap();
     let path: String = args.next().expect("Enter an input file!");
     let file: String = fs::read_to_string(path).expect("Input file does not exist!");
-    let mut heap: Vec<i32> = vec![];
+    let mut heap: Vec<i32> = vec![0];
     let mut stack: Vec<i32> = vec![];
+    let mut bank: Vec<i32> = vec![];
     let mut heads: Vec<KSHead> = vec![KSHead { script_location: -1, loop_brack_stack: vec![], sloop_brack_stack: vec![], mem_pointer: 0, current_char: ' ', script: file}];
     let mut head: KSHead = (*heads.last().unwrap()).clone();
     /*let mut fstack: Vec<usize> = vec![];
@@ -147,7 +185,7 @@ fn main() {
                     '%' => {
                         let left: i32 = stack.pop().unwrap_or_else(||0);
                         let right: i32 = stack.pop().unwrap_or_else(||0);
-                        stack.push(left % right);
+                        stack.push(left.checked_rem(right).unwrap_or_else(||0));
                     }
                     '^' => {
                         stack.pop();
@@ -165,10 +203,15 @@ fn main() {
                         heap[head.mem_pointer as usize] = *stack.last().unwrap_or_else(||&0);
                     }
                     't' => {
-                        stack.push((head.next().unwrap_or_else(||'?') as u32) as i32);
+                        stack.push((head.next_or('?') as u32) as i32);
                     }
                     'u' => {
-                        heap[head.mem_pointer as usize] = (head.next().unwrap_or_else(||'?') as u32) as i32;
+                        heap[head.mem_pointer as usize] = (head.next_or('?') as u32) as i32;
+                    }
+                    'z' => {
+                        for _ in 0..head.next_number() {
+                            stack.push(*stack.last().unwrap_or_else(||&0));
+                        }
                     }
                     /*'f' => {
                         match head.next() {
@@ -220,8 +263,7 @@ fn main() {
                             match head.next() {
                                 Some(c) => {
                                     match c {
-                                        '\n' => {break;}
-                                        '\r' => {break;}
+                                        '\n' | '\r' => {break;}
                                         _ => {}
                                     }
                                 }
@@ -238,6 +280,38 @@ fn main() {
                             }
                         } else {
                             head.loop_brack_stack.pop();
+                        }
+                    }
+                    'w' => {
+                        let st = head.next_string();
+                        head.push_string(st, &mut stack);
+                    }
+                    'r' => {
+                        if let Some(r) = stack.pop() {
+                            let n: i32;
+                            if r < 0 {
+                                n = stack.len() as i32;
+                            } else {
+                                n = r;
+                            }
+                            let mut v: Vec<i32> = vec![];
+                            for _ in 0..n {
+                                v.push(stack.pop().unwrap_or_else(||0));
+                            }
+                            v.reverse();
+                            while let Some(e) = v.pop() {
+                                stack.push(e);
+                            }
+                        }
+                    }
+                    'b' => {
+                        if let Some(n) = stack.pop() {
+                            bank.push(n);
+                        }
+                    }
+                    'i' => {
+                        if let Some(n) = bank.pop() {
+                            stack.push(n);
                         }
                     }
                     _ => {}

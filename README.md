@@ -5,10 +5,11 @@ Brainfuck was supposed to be as annoying as possible, but fuck that. Number lite
 Much more stack based than BF, as it seems that it's more efficient.
 
 # Additions
-Adds a stack.
-Popping the stack will pad it with 0s.
+Adds two stacks (one for operating, one for banking).
+Popping an empty stack will pad it with 0s.
 The heap uses i32s, making some BF projects that overflow unable to interpret. However, this allows for higher limits, and allows you to have more options for output.
 The heap also uses a vector, expanding on out-of-bounds.
+The banking stack cannot be operated on, instead
 
 # Instructions
 Old BF:
@@ -34,7 +35,7 @@ Stack loops are completely disconnected from heap loops. You can have 2 loops we
 y: Sets the memory pointer to the current heap value.
 t: Pushes a char onto the stack.
 u: Puts a char into the heap.
-w: Pops the stack, and pushes a string of that length onto the stack (first char is at the top).
+w: Pushes a string encapsulated with quotation marks onto the stack (first char is at the top). You can push quotation marks by adding a backslash.
 r: Pops the stack, and reverses that many numbers.
 
 ;: Interprets the rest of this line as a comment.
@@ -44,6 +45,9 @@ v: Pushes a number onto the stack.
 o: Pushes the current heap value onto the stack.
 p: Pops the current stack value into the heap.
 c: Copies the current stack value into the heap (doesn't pop).
+z: Duplicates the top of the stack by a number.
+b: Pops the top of the stack and pushes it onto the bank.
+i: Pops the top of the bank and pushes it onto the stack.
 
 Stack arithmetic will pop the left and right values.
 s+: Adds the top two items in the stack (s prefix due to BF's +).
