@@ -1,7 +1,7 @@
 #![allow(arithmetic_overflow)]
 #![allow(overflowing_literals)]
 
-use std::{env::Args, fs, io::{stdout, Write}, collections::HashMap};
+use std::{env::Args, fs, io::{stdout, Write}, /*collections::HashMap*/};
 
 use getch::Getch;
 
@@ -49,26 +49,32 @@ impl KSHead {
     }
 }
 
-fn char_at(str: &String, i: usize) -> Option<char> {
+/*fn char_at(str: &String, i: usize) -> Option<char> {
     match str.get(i..) {
         Some(s) => {s.chars().next()}
         None => None
     }
+}*/
+
+fn move_right(v: &mut Vec<i32>, head: &mut KSHead) {
+    head.mem_pointer += 1; if head.mem_pointer >= v.len() as isize { v.push(0); }
 }
 
-const KS_HEAP_SIZE: usize = 30000;
+fn move_left(v: &mut Vec<i32>, head: &mut KSHead) {
+    head.mem_pointer -= 1; if head.mem_pointer < 0 { v.insert(0, 0); head.mem_pointer += 1; }
+}
 
 fn main() {
     let mut args: Args = std::env::args();
     args.next().unwrap();
     let path: String = args.next().expect("Enter an input file!");
     let file: String = fs::read_to_string(path).expect("Input file does not exist!");
-    let mut heap: [i32; KS_HEAP_SIZE] = [0; KS_HEAP_SIZE];
+    let mut heap: Vec<i32> = vec![];
     let mut stack: Vec<i32> = vec![];
     let mut heads: Vec<KSHead> = vec![KSHead { script_location: -1, loop_brack_stack: vec![], sloop_brack_stack: vec![], mem_pointer: 0, current_char: ' ', script: file}];
     let mut head: KSHead = (*heads.last().unwrap()).clone();
-    let mut fstack: Vec<usize> = vec![];
-    let mut funcs: HashMap<i32, KSHead> = HashMap::new();
+    /*let mut fstack: Vec<usize> = vec![];
+    let mut funcs: HashMap<i32, KSHead> = HashMap::new();*/
     head.current();
     let g: Getch = Getch::new();
     loop {
@@ -81,8 +87,8 @@ fn main() {
                     '=' => { heap[head.mem_pointer as usize] = head.next_number(); }
                     '+' => { heap[head.mem_pointer as usize] += 1; }
                     '-' => { heap[head.mem_pointer as usize] -= 1; }
-                    '>' => { head.mem_pointer += 1; if head.mem_pointer >= KS_HEAP_SIZE as isize { head.mem_pointer = 0; } }
-                    '<' => { head.mem_pointer -= 1; if head.mem_pointer < 0 { head.mem_pointer = KS_HEAP_SIZE as isize - 1; } }
+                    '>' => { move_right(&mut heap, &mut head); }
+                    '<' => { move_left(&mut heap, &mut head); }
                     '[' => { head.loop_brack_stack.push(head.script_location); }
                     ']' => {
                         if heap[head.mem_pointer as usize] != 0 {
@@ -199,8 +205,16 @@ fn main() {
                             None => {}
                         }
                     }*/
-                    '}' => { head.mem_pointer += head.next_number() as isize; }
-                    '{' => { head.mem_pointer -= head.next_number() as isize; }
+                    '}' => {
+                        for _ in 0..head.next_number() {
+                            move_right(&mut heap, &mut head);
+                        }
+                    }
+                    '{' => { 
+                        for _ in 0..head.next_number() {
+                            move_left(&mut heap, &mut head);
+                        }
+                    }
                     ';' => {
                         loop {
                             match head.next() {
@@ -233,7 +247,7 @@ fn main() {
                 match heads.pop() {
                     Some(_) => {
                         match heads.last() {
-                            Some(mut l) => {
+                            Some(l) => {
                                 head = l.clone();
                             }
                             None => {break;}

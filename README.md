@@ -8,6 +8,7 @@ Much more stack based than BF, as it seems that it's more efficient.
 Adds a stack.
 Popping the stack will pad it with 0s.
 The heap uses i32s, making some BF projects that overflow unable to interpret. However, this allows for higher limits, and allows you to have more options for output.
+The heap also uses a vector, expanding on out-of-bounds.
 
 # Instructions
 Old BF:
